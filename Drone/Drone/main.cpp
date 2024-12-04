@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <cmath>
+#include <vector>
 
 #include "OpenGLHelper.h"
 #include "Drone.h"
@@ -12,11 +13,38 @@
 #include "globals.h"
 #include "callbacks.h"
 
-
 void createBackround(float vertices[], unsigned int numVertices, unsigned int& VAO, unsigned int& VBO, Shader shader);
 void prepareVAOandVBO(float vertices[], unsigned int numVertices, unsigned int& VAO, unsigned int& VBO, unsigned int stride);
 void drawSquare(unsigned int texture, unsigned int offset, unsigned int numOfPoints);
+void showDroneDestroyedMessage(Shader shader, Drone drone, int side, unsigned int messageTexture);
+unsigned int getTextureFromNumber(int number);
+void loadNumberTextures();
+void drawBatteryPercent(float number, int side, Shader shader);
+void drawDroneCoordinates(Drone drone, int side, Shader shader);
 
+unsigned int zeroTexture;
+unsigned int oneTexture;
+unsigned int twoTexture;
+unsigned int threeTexture;
+unsigned int fourTexture;
+unsigned int fiveTexture;
+unsigned int sixTexture;
+unsigned int sevenTexture;
+unsigned int eightTexture;
+unsigned int nineTexture;
+unsigned int percentageTexture;
+unsigned int xTexture;
+unsigned int yTexture;
+unsigned int zeroDotTexture;
+unsigned int minusTexture;
+
+double valueToPercentage(float value, double minValue = 1.00, double maxValue = 2.81) {
+    if (value < minValue) return 100.0; 
+    if (value > maxValue) return 0.0;   
+
+    double percentage =  100 - ((value - minValue) / (maxValue - minValue)) * 100.0;
+    return static_cast<int>(std::round(percentage));
+}
 
 int main(void)
 {
@@ -30,8 +58,6 @@ int main(void)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     GLFWwindow* window;
-    unsigned int wWidth = 1400;
-    unsigned int wHeight = 800;
     const char wTitle[] = "[Drone]";
     window = glfwCreateWindow(width, height, wTitle, NULL, NULL);
 
@@ -41,7 +67,7 @@ int main(void)
         glfwTerminate();
         return 2;
     }
-
+    glfwSetWindowSizeLimits(window, width, height, width, height);
     glfwMakeContextCurrent(window);
 
 
@@ -51,7 +77,7 @@ int main(void)
         return 3;
     }
     Shader messageShader("message.vert", "basic.frag");
-    Shader unifiedShader("basic.vert", "basic.frag");
+    Shader unifiedShader("basic.vert", "background.frag");
     Shader pointShader("point.vert", "point.frag");
     Shader areaShader("area.vert", "area.frag");
     Shader barShader("bar.vert", "bar.frag");
@@ -78,10 +104,15 @@ int main(void)
     -0.3,-0.80,        1,1,
     -0.9, -0.80,       0,1,
     // name
-   -0.6,  0.75,       1,0,
-   -0.95, 0.75,       0,0,
-   -0.6,  0.85,       1,1,
-   -0.95, 0.85,       0,1,
+   -0.4,  0.85,       1,0,
+   -0.95, 0.85,       0,0,
+   -0.4,  0.95,       1,1,
+   -0.95, 0.95,       0,1,
+    // battery percent
+   -0.85, -0.9,       1,0,
+   -0.90, -0.9,       0,0,
+   -0.85, -0.8,       1,1,
+   -0.90, -0.8,       0,1,
     };
     unsigned int VAO, VBO;
     createBackround(vertices, sizeof(vertices), VAO, VBO, unifiedShader);
@@ -95,17 +126,7 @@ int main(void)
     unsigned int nameAndIndex = loadTexture(NAME_PATH);
     unsigned int drone1Destroyed = loadTexture(DRONE1_DESTROYED_PATH);
     unsigned int drone2Destroyed = loadTexture(DRONE2_DESTROYED_PATH);
-
-    unsigned int pointStride = (2 + 3) * sizeof(float);
-
-    float pointVertex[] = {
-        0.0, 0.0,  0,1,0,
-     -0.25,-0.25,  0,1,0
-    };
-    unsigned int pointVAO, pointVBO;
-    //prepareVAOandVBO(pointVertex, sizeof(pointVertex), pointVAO, pointVBO, pointStride);
-
-    //pointShader.use();
+    loadNumberTextures();
 
     glClearColor(0, 0, 0, 1.0);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -114,8 +135,6 @@ int main(void)
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    const float tolerance = 0.001;
 
     glfwSetMouseButtonCallback(window, area_mouse_click_callback);
     glfwSetKeyCallback(window, setStartAreaPosition);
@@ -128,15 +147,15 @@ int main(void)
         }
         glClear(GL_COLOR_BUFFER_BIT);
         unifiedShader.use();
+        unifiedShader.setBool("isMap", true);
         glBindVertexArray(VAO);
 
         drawSquare(backgroundTexture, 0, 4);
+
+        unifiedShader.setBool("isMap", false);
         drawSquare(nameAndIndex, 16, 4);
         glUseProgram(0);
 
-        if (std::fabs(std::fmod(drone1.batteryPercent, 0.10)) < tolerance) {
-            //std::cout << "Battery percentage: " << drone1.batteryPercent << std::endl;
-        }
         barShader.use();
         barShader.setBool("isBackground", true);
         barShader.setInt("progressBarId", 1);
@@ -160,23 +179,19 @@ int main(void)
 
         glUseProgram(0);
 
-        bindPointVAOAndShader(window, pointShader, pointVAO, drone1, drone2, yellowDroneTexture, redDroneTexture);
+        drawDrones(window, pointShader, yellowDroneTexture, redDroneTexture);
 
-        if (drone1.isDestroyed) {
-            messageShader.use();
-            messageShader.setFloat("yPosition", 0.12);
-            messageShader.setInt("side", 1);
-            drawSquare(drone1Destroyed, 12, 4);
-        }
-        if (drone2.isDestroyed) {
-            messageShader.use();
-            messageShader.setFloat("yPosition", 0.12);
-            messageShader.setInt("side", -1);
-            drawSquare(drone2Destroyed, 12, 4);
-        }
+        drawBatteryPercent(drone1.batteryPercent,  1, messageShader);
+        drawBatteryPercent(drone2.batteryPercent, -1, messageShader);
+
+        drawDroneCoordinates(drone1,  1, messageShader);
+        drawDroneCoordinates(drone2, -1, messageShader);
+
+        showDroneDestroyedMessage(messageShader, drone1,  1, drone1Destroyed);
+        showDroneDestroyedMessage(messageShader, drone2, -1, drone2Destroyed);
 
         if (isRightBtnClicked) {
-            expandAreaConstant += 0.00001;
+            expandAreaConstant += 0.0001;
         }
         areaShader.use();
         areaShader.setVec2("uPos", xOffset, yOffset);
@@ -200,19 +215,19 @@ int main(void)
     glDeleteVertexArrays(1, &VAO);
     pointShader.remove();
     unifiedShader.remove();
-    glDeleteBuffers(1, &pointVBO);
-    glDeleteVertexArrays(1, &pointVAO);
-
     glfwTerminate();
 
     return 0;
 }
-
-void drawSquare(unsigned int texture, unsigned int offset, unsigned int numOfPoints) {
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glDrawArrays(GL_TRIANGLE_STRIP, offset, numOfPoints);
-    glBindTexture(GL_TEXTURE_2D, 0);
+void showDroneDestroyedMessage(Shader shader, Drone drone, int side, unsigned int messageTexture) {
+    if (drone.isDestroyed) {
+        shader.use();
+        shader.setFloat("yPosition", 0.12);
+        shader.setFloat("xPosition", 0);
+        shader.setInt("side", side);
+        drawSquare(messageTexture, 12, 4);
+    }
+    glUseProgram(0);
 }
 
 void createBackround(float vertices[],
@@ -241,4 +256,150 @@ void prepareVAOandVBO(float vertices[], unsigned int numVertices, unsigned int& 
     glEnableVertexAttribArray(1);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+}
+
+void loadNumberTextures() {
+    zeroTexture = loadTexture(NUMBER_TEXTURE_PATH[0]);
+    oneTexture = loadTexture(NUMBER_TEXTURE_PATH[1]);
+    twoTexture = loadTexture(NUMBER_TEXTURE_PATH[2]);
+    threeTexture = loadTexture(NUMBER_TEXTURE_PATH[3]);
+    fourTexture = loadTexture(NUMBER_TEXTURE_PATH[4]);
+    fiveTexture = loadTexture(NUMBER_TEXTURE_PATH[5]);
+    sixTexture = loadTexture(NUMBER_TEXTURE_PATH[6]);
+    sevenTexture = loadTexture(NUMBER_TEXTURE_PATH[7]);
+    eightTexture = loadTexture(NUMBER_TEXTURE_PATH[8]);
+    nineTexture = loadTexture(NUMBER_TEXTURE_PATH[9]);
+    percentageTexture = loadTexture(PERCENTAGE_PATH);
+    zeroDotTexture = loadTexture(ZERO_DOT_PATH);
+    minusTexture = loadTexture(MINUS_PATH);
+    xTexture = loadTexture(X_TEXT_PATH);
+    yTexture = loadTexture(Y_TEXT_PATH);
+}
+
+unsigned int getTextureFromNumber(int number) {
+    switch (number)
+    {
+    case 0:
+        return zeroTexture;
+    case 1:
+        return oneTexture;
+    case 2:
+        return twoTexture;
+    case 3:
+        return threeTexture;
+    case 4:
+        return fourTexture;
+    case 5:
+        return fiveTexture;
+    case 6:
+        return sixTexture;
+    case 7:
+        return sevenTexture;
+    case 8:
+        return eightTexture;
+    case 9:
+        return nineTexture;
+    default:
+        break;
+    }
+}
+
+void drawDigits(const std::vector<int>& digits, Shader& shader, float offset) {
+    for (int digit : digits) {
+        shader.setFloat("xPosition", offset);
+        drawSquare(getTextureFromNumber(digit), 20, 4);
+        offset += 0.05;
+    }
+}
+void drawBatteryPercent(float number, int side, Shader shader) {
+    int percentage = valueToPercentage(number);
+    int firstDigit;
+    int secondDigit;
+
+    shader.use();
+    shader.setInt("side", side);
+    shader.setFloat("yPosition", -0.01);
+
+    if (percentage == 100) {
+        firstDigit = percentage / 100;
+        secondDigit = (percentage / 10) % 10;
+        int thirdDigit = percentage % 100;
+
+        std::vector<int> digits = { firstDigit, secondDigit, thirdDigit };
+
+        drawDigits(digits, shader, 0);
+    
+        shader.setFloat("xPosition", 0.15);
+        drawSquare(percentageTexture, 20, 4);
+
+    }else if(percentage >= 10){
+        firstDigit = percentage / 10;
+        secondDigit = percentage  % 10;
+        std::vector<int> digits = { firstDigit, secondDigit };
+
+        drawDigits(digits, shader, 0);
+
+        shader.setFloat("xPosition", 0.1);
+        drawSquare(percentageTexture, 20, 4);
+    }
+    else {
+        firstDigit =  percentage;
+        shader.setFloat("xPosition", 0);
+        drawSquare(getTextureFromNumber(firstDigit), 20, 4);
+
+        shader.setFloat("xPosition", 0.05);
+        drawSquare(percentageTexture, 20, 4);
+    }
+    glUseProgram(0);
+}
+
+void drawDroneCoordinates(Drone drone, int side, Shader shader) {
+    float offset = 0.00;
+    shader.use();
+    shader.setInt("side", side);
+    shader.setFloat("yPosition", -0.1);
+    shader.setFloat("xPosition", offset);
+    drawSquare(xTexture, 20, 4);
+
+    int x = (drone.centerX + drone.x) * 100;
+    int y = (drone.centerY + drone.y) * 100;
+    if (x < 0) {
+        x = -1 * x;
+        offset += 0.05;
+        shader.setFloat("xPosition", offset);
+        drawSquare(minusTexture, 20, 4);
+    }
+    int firstDigitX = x / 10;
+    int secondDigitX = x % 10;
+    std::vector<int> digitsX = { firstDigitX, secondDigitX };
+    
+    offset += 0.05;
+    shader.setFloat("xPosition", offset);
+    drawSquare(zeroDotTexture, 20, 4);
+
+    offset += 0.05;
+    shader.setFloat("xPosition", offset);
+    drawDigits(digitsX, shader, offset);
+
+    offset += 0.10;
+    shader.setFloat("xPosition", offset);
+    drawSquare(yTexture, 20, 4);
+    if (y < 0) {
+        y = -1 * y;
+        offset += 0.05;
+        shader.setFloat("xPosition", offset);
+        drawSquare(minusTexture, 20, 4);
+    }
+    int firstDigitY = y / 10;
+    int secondDigitY = y % 10;
+    std::vector<int> digitsY = { firstDigitY, secondDigitY };
+
+    offset += 0.05;
+    shader.setFloat("xPosition", offset);
+    drawSquare(zeroDotTexture, 20, 4);
+
+    offset += 0.05;
+    drawDigits(digitsY, shader, offset);
+
+    glUseProgram(0);
 }
