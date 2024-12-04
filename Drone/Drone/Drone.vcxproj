@@ -141,6 +141,7 @@
   <ItemGroup>
     <None Include="area.frag" />
     <None Include="area.vert" />
+    <None Include="background.frag" />
     <None Include="bar.frag" />
     <None Include="bar.vert" />
     <None Include="basic.frag" />

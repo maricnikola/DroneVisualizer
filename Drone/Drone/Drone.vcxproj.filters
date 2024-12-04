@@ -66,6 +66,9 @@
     <None Include="point.vert">
       <Filter>Source Files\Shaders</Filter>
     </None>
+    <None Include="background.frag">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stb_image.h">

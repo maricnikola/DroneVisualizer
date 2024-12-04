@@ -111,3 +111,9 @@ unsigned int loadTexture(const char* path)
 
     return texture;
 }
+void drawSquare(unsigned int texture, unsigned int offset, unsigned int numOfPoints) {
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glDrawArrays(GL_TRIANGLE_STRIP, offset, numOfPoints);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}

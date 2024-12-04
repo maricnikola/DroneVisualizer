@@ -8,5 +8,6 @@ uniform sampler2D uTex;
 void main()
 {
 	outCol = texture(uTex, chTex);
+
 }
 

@@ -26,7 +26,11 @@ void area_mouse_click_callback(GLFWwindow* window, int button, int action, int m
     float setedOffsetY1 = areaY1 + yOffset;
     float setedOffsetY2 = areaY2 + yOffset;
 
-    bool inArea = mouseX <= setedOffsetX1 && mouseX >= setedOffsetX2 && mouseY >= setedOffsetY1 && mouseY <= setedOffsetY2;
+    float centerX = (setedOffsetX1 + setedOffsetX2) / 2;
+    float centerY = (setedOffsetY1 + setedOffsetY2) / 2;
+    float distance = calculateDistance(centerX, centerY, mouseX, mouseY);
+    //bool inArea = mouseX <= setedOffsetX1 && mouseX >= setedOffsetX2 && mouseY >= setedOffsetY1 && mouseY <= setedOffsetY2;
+    bool inArea = distance < (0.09 + expandAreaConstant);
     if (button == GLFW_MOUSE_BUTTON_LEFT && inArea) {
         if (action == GLFW_PRESS) {
             glfwGetCursorPos(window, &xpos, &ypos);

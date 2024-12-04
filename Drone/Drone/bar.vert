@@ -8,14 +8,17 @@ uniform int progressBarId;
 uniform float batteryConstant;
 void main()
 {
-	vec4 position = vec4(inPos.x * progressBarId, inPos.y, 0.0, 1.0);
+	float translation = 0;
+	if(progressBarId == -1) translation = 1.2;
+	vec4 position = vec4(inPos.x + translation, inPos.y, 0.0, 1.0);
 	if(!isBackground){
 		float xPosition;
 		if(inPos.x == -0.3){
-			xPosition =  (progressBarId * (inPos.x -0.015)) * batteryConstant;
+			xPosition =  (inPos.x -0.015)* batteryConstant;
 		}else{
-			xPosition = progressBarId * (inPos.x + 0.015);
+			xPosition = inPos.x + 0.015;
 		}
+		if(progressBarId ==-1) xPosition += translation;
 		position = vec4(xPosition, inPos.y, 0.0, 1.0);
 		if(inPos.y == -0.8){
 			position = vec4(xPosition, inPos.y - 0.02, 0.0, 1.0);
