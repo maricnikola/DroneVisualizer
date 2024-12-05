@@ -170,7 +170,6 @@ int main(void)
         barShader.setBool("isBackground", true);
         barShader.setInt("progressBarId", -1);
         barShader.setFloat("batteryConstant", drone2.batteryPercent);
-
         drawSquare(progressRedTexture, 12, 4);
 
         barShader.setBool("isBackground", false);
@@ -304,7 +303,7 @@ unsigned int getTextureFromNumber(int number) {
     }
 }
 
-void drawDigits(const std::vector<int>& digits, Shader& shader, float offset) {
+void drawDigits(const std::vector<int>& digits, Shader shader, float offset) {
     for (int digit : digits) {
         shader.setFloat("xPosition", offset);
         drawSquare(getTextureFromNumber(digit), 20, 4);

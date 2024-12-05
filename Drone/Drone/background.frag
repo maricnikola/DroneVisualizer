@@ -9,7 +9,7 @@ void main()
 {
 	vec4 tex = texture(uTex, chTex);
 	if(isMap){
-		tex = mix(tex, vec4(0.0, 0.5, 0.0,	1), 0.2);
+		tex = mix(tex, vec4(0.0, 1.0, 0.0,	1), 0.1);
 	}
 	outCol = tex;
 }

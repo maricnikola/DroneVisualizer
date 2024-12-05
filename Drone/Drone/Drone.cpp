@@ -7,8 +7,8 @@
 #include "globals.h"
 #include "OpenGLHelper.h"
 
-Drone drone1(0.28f, 0.125f, 0.00f, 0.00f, false, 1.00f, false);
-Drone drone2(0.28f, 0.125f, 0.10f, 0.10f, false, 1.00f, false);
+Drone drone1(0.28f, 0.125f, 0.00f, 0.00f, false, 2.82f, false);
+Drone drone2(0.28f, 0.125f, 0.10f, 0.10f, false, 2.82f, false);
 
 void Drone::deactivateDrone() {
     batteryPercent = 2.82;
@@ -21,8 +21,7 @@ void Drone::deactivateDrone() {
 
 void Drone::decreasBatteryLevel() {
     if (batteryPercent > 2.811) {
-        isDestroyed = true;
-        batteryPercent = 2.81f;
+        deactivateDrone();
     }
     else {
         batteryPercent += batteryConstant;
@@ -57,7 +56,7 @@ void bindDrone1Commands(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS && drone1.batteryPercent > 0.00f) {
         drone1.isTurned = true;
     }
-    if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) {
+    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) {
         drone1.isTurned = false;
     }
     if (drone1.isTurned) {
@@ -89,7 +88,7 @@ void bindDrone1Commands(GLFWwindow* window) {
 
 void bindDrone2Commands(GLFWwindow* window) {
     if (drone2.isDestroyed) return;
-    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) {
+    if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) {
         drone2.isTurned = true;
     }
     if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) {
@@ -126,7 +125,7 @@ void drawDrones(GLFWwindow* window, Shader shader, unsigned int texture1, unsign
     bindDrone1Commands(window);
     bindDrone2Commands(window);
 
-    if (drone1.isTurned && drone2.isTurned) {
+    if ((!drone1.isDestroyed || !drone1.isDestroyed) && drone1.isTurned && drone2.isTurned) {
         float distanceBetweenDrons = calculateDistance(drone1.centerX + drone1.x, drone1.centerY + drone1.y, drone2.centerX + drone2.x, drone2.centerY + drone2.y);
         if (distanceBetweenDrons < 0.03) {
             drone1.deactivateDrone();
