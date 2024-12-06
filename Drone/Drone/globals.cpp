@@ -66,7 +66,7 @@ void updateArea() {
 	areaY2 += mouseY - clickedYPosition;
 }
 
-float batteryConstant = 0.0001f;
+float batteryConstant = 0.002f;
 float batteryDownMargin = 0.354f;
 
 float calculateDistance(float x2, float y2, float x1, float y1) {

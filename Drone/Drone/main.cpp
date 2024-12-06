@@ -38,6 +38,9 @@ unsigned int yTexture;
 unsigned int zeroDotTexture;
 unsigned int minusTexture;
 
+const double TARGET_FPS = 60.0;
+const double FPS = 1.0 / TARGET_FPS;
+
 double valueToPercentage(float value, double minValue = 1.00, double maxValue = 2.81) {
     if (value < minValue) return 100.0; 
     if (value > maxValue) return 0.0;   
@@ -139,8 +142,19 @@ int main(void)
     glfwSetMouseButtonCallback(window, area_mouse_click_callback);
     glfwSetKeyCallback(window, setStartAreaPosition);
     glfwSetCursorPosCallback(window, cursor_position_callback);
-    while (!glfwWindowShouldClose(window))
-    {
+    double previousTime = glfwGetTime();
+
+    while (!glfwWindowShouldClose(window)) {
+        double currentTime = glfwGetTime();
+        double elapsedTime = currentTime - previousTime;
+
+        if (elapsedTime < FPS) {
+            glfwWaitEventsTimeout(FPS - elapsedTime);
+            continue;
+        }
+        previousTime = currentTime;
+        
+        
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         {
             glfwSetWindowShouldClose(window, GL_TRUE);
@@ -190,7 +204,7 @@ int main(void)
         showDroneDestroyedMessage(messageShader, drone2, -1, drone2Destroyed);
 
         if (isRightBtnClicked) {
-            expandAreaConstant += 0.0001;
+            expandAreaConstant += 0.001;
         }
         areaShader.use();
         areaShader.setVec2("uPos", xOffset, yOffset);

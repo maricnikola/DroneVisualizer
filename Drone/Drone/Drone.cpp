@@ -65,19 +65,19 @@ void bindDrone1Commands(GLFWwindow* window) {
         float drone1YPos = drone1.y + drone1.centerY;
         if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
         {
-            drone1.y += 0.001;
+            drone1.y += 0.01;
         }
         if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
         {
-            drone1.y -= 0.001;
+            drone1.y -= 0.01;
         }
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
         {
-            drone1.x += 0.001;
+            drone1.x += 0.01;
         }
         if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
         {
-            drone1.x -= 0.001;
+            drone1.x -= 0.01;
         }
     }
     else {
@@ -100,19 +100,19 @@ void bindDrone2Commands(GLFWwindow* window) {
         float drone2YPos = drone2.y + drone2.centerY;
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS && drone2YPos <= 1)
         {
-            drone2.y += 0.001;
+            drone2.y += 0.01;
         }
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && drone2YPos > -1)
         {
-            drone2.y -= 0.001;
+            drone2.y -= 0.01;
         }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS && drone2XPos <= 1)
         {
-            drone2.x += 0.001;
+            drone2.x += 0.01;
         }
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS && drone2XPos >= -1)
         {
-            drone2.x -= 0.001;
+            drone2.x -= 0.01;
         }
     }
     else if (!drone2.isDestroyed) {
