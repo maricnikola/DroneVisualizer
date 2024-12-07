@@ -18,6 +18,7 @@ extern const char* X_TEXT_PATH;
 extern const char* Y_TEXT_PATH;
 extern const char* ZERO_DOT_PATH;
 extern const char* MINUS_PATH;
+extern const char* DOT_PATH;
 
 //extern unsigned int zeroTexture;
 //extern unsigned int oneTexture;

@@ -12,12 +12,13 @@
 #include "Shader.h"
 #include "globals.h"
 #include "callbacks.h"
+#include <iomanip>
 
 void createBackround(float vertices[], unsigned int numVertices, unsigned int& VAO, unsigned int& VBO, Shader shader);
 void prepareVAOandVBO(float vertices[], unsigned int numVertices, unsigned int& VAO, unsigned int& VBO, unsigned int stride);
 void drawSquare(unsigned int texture, unsigned int offset, unsigned int numOfPoints);
 void showDroneDestroyedMessage(Shader shader, Drone drone, int side, unsigned int messageTexture);
-unsigned int getTextureFromNumber(int number);
+unsigned int getTextureFromNumber(char number);
 void loadNumberTextures();
 void drawBatteryPercent(float number, int side, Shader shader);
 void drawDroneCoordinates(Drone drone, int side, Shader shader);
@@ -41,12 +42,12 @@ unsigned int minusTexture;
 const double TARGET_FPS = 60.0;
 const double FPS = 1.0 / TARGET_FPS;
 
-double valueToPercentage(float value, double minValue = 1.00, double maxValue = 2.81) {
-    if (value < minValue) return 100.0; 
-    if (value > maxValue) return 0.0;   
+std::string valueToPercentage(float value, double minValue = 1.00, double maxValue = 2.81) {
+    if (value < minValue) return "100";
+    if (value > maxValue) return "0";
 
     double percentage =  100 - ((value - minValue) / (maxValue - minValue)) * 100.0;
-    return static_cast<int>(std::round(percentage));
+    return std::to_string(static_cast<int>(std::round(percentage)));
 }
 
 int main(void)
@@ -283,136 +284,85 @@ void loadNumberTextures() {
     eightTexture = loadTexture(NUMBER_TEXTURE_PATH[8]);
     nineTexture = loadTexture(NUMBER_TEXTURE_PATH[9]);
     percentageTexture = loadTexture(PERCENTAGE_PATH);
-    zeroDotTexture = loadTexture(ZERO_DOT_PATH);
+    zeroDotTexture = loadTexture(DOT_PATH);
     minusTexture = loadTexture(MINUS_PATH);
     xTexture = loadTexture(X_TEXT_PATH);
     yTexture = loadTexture(Y_TEXT_PATH);
 }
 
-unsigned int getTextureFromNumber(int number) {
-    switch (number)
+unsigned int getTextureFromNumber(char character) {
+    switch (character)
     {
-    case 0:
+    case '0':
         return zeroTexture;
-    case 1:
+    case '1':
         return oneTexture;
-    case 2:
+    case '2':
         return twoTexture;
-    case 3:
+    case '3':
         return threeTexture;
-    case 4:
+    case '4':
         return fourTexture;
-    case 5:
+    case '5':
         return fiveTexture;
-    case 6:
+    case '6':
         return sixTexture;
-    case 7:
+    case '7':
         return sevenTexture;
-    case 8:
+    case '8':
         return eightTexture;
-    case 9:
+    case '9':
         return nineTexture;
+    case '-':
+        return minusTexture;
+    case 'X':
+        return xTexture;
+    case 'Y':
+        return yTexture;
+    case '%':
+        return percentageTexture;
+    case '.':
+        return zeroDotTexture;
     default:
         break;
     }
 }
-
-void drawDigits(const std::vector<int>& digits, Shader shader, float offset) {
-    for (int digit : digits) {
+void drawCharacters(const std::string characters, Shader shader, float offset) {
+    for (char character : characters) {
         shader.setFloat("xPosition", offset);
-        drawSquare(getTextureFromNumber(digit), 20, 4);
+        drawSquare(getTextureFromNumber(character), 20, 4);
         offset += 0.05;
     }
 }
 void drawBatteryPercent(float number, int side, Shader shader) {
-    int percentage = valueToPercentage(number);
-    int firstDigit;
-    int secondDigit;
-
+    std::string percentage = valueToPercentage(number);
+    percentage.append("%");
     shader.use();
     shader.setInt("side", side);
     shader.setFloat("yPosition", -0.01);
 
-    if (percentage == 100) {
-        firstDigit = percentage / 100;
-        secondDigit = (percentage / 10) % 10;
-        int thirdDigit = percentage % 100;
-
-        std::vector<int> digits = { firstDigit, secondDigit, thirdDigit };
-
-        drawDigits(digits, shader, 0);
+    drawCharacters(percentage, shader, 0);
     
-        shader.setFloat("xPosition", 0.15);
-        drawSquare(percentageTexture, 20, 4);
-
-    }else if(percentage >= 10){
-        firstDigit = percentage / 10;
-        secondDigit = percentage  % 10;
-        std::vector<int> digits = { firstDigit, secondDigit };
-
-        drawDigits(digits, shader, 0);
-
-        shader.setFloat("xPosition", 0.1);
-        drawSquare(percentageTexture, 20, 4);
-    }
-    else {
-        firstDigit =  percentage;
-        shader.setFloat("xPosition", 0);
-        drawSquare(getTextureFromNumber(firstDigit), 20, 4);
-
-        shader.setFloat("xPosition", 0.05);
-        drawSquare(percentageTexture, 20, 4);
-    }
     glUseProgram(0);
 }
-
+std::string doubleToStringWithTwoDecimals(double number) {
+    number = std::round(number * 100.0) / 100.0; 
+    if(number < 0) return std::to_string(number).substr(0, 5);
+    return std::to_string(number).substr(0, 4);  
+}
 void drawDroneCoordinates(Drone drone, int side, Shader shader) {
-    float offset = 0.00;
     shader.use();
     shader.setInt("side", side);
     shader.setFloat("yPosition", -0.1);
-    shader.setFloat("xPosition", offset);
-    drawSquare(xTexture, 20, 4);
 
-    int x = (drone.centerX + drone.x) * 100;
-    int y = (drone.centerY + drone.y) * 100;
-    if (x < 0) {
-        x = -1 * x;
-        offset += 0.05;
-        shader.setFloat("xPosition", offset);
-        drawSquare(minusTexture, 20, 4);
-    }
-    int firstDigitX = x / 10;
-    int secondDigitX = x % 10;
-    std::vector<int> digitsX = { firstDigitX, secondDigitX };
-    
-    offset += 0.05;
-    shader.setFloat("xPosition", offset);
-    drawSquare(zeroDotTexture, 20, 4);
+    double x = (drone.centerX + drone.x);
+    double y = (drone.centerY + drone.y);
+    std::string coordinates = "X";
+    coordinates.append(doubleToStringWithTwoDecimals(x));
+    coordinates.append("Y");
+    coordinates.append(doubleToStringWithTwoDecimals(y));
 
-    offset += 0.05;
-    shader.setFloat("xPosition", offset);
-    drawDigits(digitsX, shader, offset);
-
-    offset += 0.10;
-    shader.setFloat("xPosition", offset);
-    drawSquare(yTexture, 20, 4);
-    if (y < 0) {
-        y = -1 * y;
-        offset += 0.05;
-        shader.setFloat("xPosition", offset);
-        drawSquare(minusTexture, 20, 4);
-    }
-    int firstDigitY = y / 10;
-    int secondDigitY = y % 10;
-    std::vector<int> digitsY = { firstDigitY, secondDigitY };
-
-    offset += 0.05;
-    shader.setFloat("xPosition", offset);
-    drawSquare(zeroDotTexture, 20, 4);
-
-    offset += 0.05;
-    drawDigits(digitsY, shader, offset);
+    drawCharacters(coordinates, shader, 0);
 
     glUseProgram(0);
 }

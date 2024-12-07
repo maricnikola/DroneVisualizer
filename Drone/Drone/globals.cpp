@@ -16,6 +16,7 @@ const char* Y_TEXT_PATH = "res/text/Y.png";
 
 const char* ZERO_DOT_PATH = "res/text/zero_dot.png";
 const char* MINUS_PATH = "res/text/minus.png";
+const char* DOT_PATH = "res/text/dot.png";
 
 const char* NUMBER_TEXTURE_PATH[] = {
 	"res/numbers/0.png",
